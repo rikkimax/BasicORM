@@ -29,6 +29,7 @@ class Model {
     private $cameFromDb = false;
     private $updateStatement;
     private $insertStatement;
+    private $deleteStatement;
     private $db;
     
     protected static $ids = array();
@@ -69,6 +70,7 @@ class Model {
             
             $this->updateStatement = $db->prepare('UPDATE ' . $className . ' SET ' . $updateSets . ' WHERE ' . $where);
             $this->insertStatement = $db->prepare('INSERT INTO ' . $className . '(' . $names . ') VALUES(' . $names2 . ')');
+            $this->deleteStatement = $db->prepare('DELETE from ' . $className . ' where ' . $where);
         } else {
             throw new \Exception('Tried getting a database connection and failed - none existed');
         }
@@ -114,27 +116,15 @@ class Model {
     }
     
     public function delete() {
-        $className = explode('\\', get_class($this));
-        $className = array_pop($className);
-                
-        $where = '';
-        foreach(static::$ids as $id) {
-            $where .= $id . '=:' . $id . ' AND ';
-        }
-        if (count_chars($where) > 0) {
-            $where = substr($where, 0, -5);
-        }
-                
         // array of id values
-        $stmt = $this->db->prepare('DELETE from ' . $className . ' where ' . $where);
         foreach(class_values($this) as $key => $value) {
             if (in_array($key, static::$ids)) {
-                $stmt->bindValue(':' . $key, $value);
+                $this->deleteStatement->bindValue(':' . $key, $value);
             }
         }
-        $stmt->execute();
-        if ($stmt->errorCode() !== '00000')
-            throw new \Exception('Could not delete from database' . serialize($stmt->errorInfo()));
+        $this->deleteStatement->execute();
+        if ($this->deleteStatement->errorCode() !== '00000')
+            throw new \Exception('Could not delete from database' . serialize($this->deleteStatement->errorInfo()));
     }
     
     public function hasComeFromDB() {
@@ -229,7 +219,9 @@ class Model {
                     throw new \Exception('Could not get many from database' . serialize($stmt->errorInfo()));
 
                 for($i = 0; $i < $stmt->rowCount(); $i++) {
-                    $ret[] = $stmt->fetchObject(get_called_class());
+                    $item = $stmt->fetchObject(get_called_class());
+                    $item->hasComeFromDB();
+                    $ret[] = $item;
                 }
             }
         } else {
