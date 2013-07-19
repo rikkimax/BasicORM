@@ -200,6 +200,43 @@ class Model {
         
         return $ret;
     }
+    
+    public static function getMany($condition=array(), $db = null) {
+        $ret = array();
+        
+        if ($db == null && isset($GLOBALS[GlobalDBName])) {
+            $db = $GLOBALS[GlobalDBName];
+        }
+        if ($db != null) {
+            if (count($condition) > 0) {
+                $className = explode('\\', get_called_class());
+                $className = array_pop($className);
+
+                $where = '';
+                foreach($condition as $key => $value) {
+                    $where .= $key . '=:' . $key . ' AND ';
+                }
+                if (count_chars($where) > 0) {
+                    $where = substr($where, 0, -5);
+                }
+
+                $stmt = $db->prepare('SELECT * from ' . $className . ' where ' . $where);
+                foreach ($condition as $key => $value) {
+                    $stmt->bindValue(':' . $key, $value);
+                }
+                $stmt->execute();
+                if ($stmt->errorCode() !== '00000')
+                    throw new \Exception('Could not get many from database' . serialize($stmt->errorInfo()));
+
+                for($i = 0; $i < $stmt->rowCount(); $i++) {
+                    $ret[] = $stmt->fetchObject(get_called_class());
+                }
+            }
+        } else {
+            throw new \Exception('Tried getting a database connection and failed - none existed');
+        }
+        return $ret;
+    }
 }
 
 $registered_classes = array();
