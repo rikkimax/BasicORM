@@ -41,6 +41,11 @@ Get many example:
 $classes = T::getMany(['message' => 'test']);
 ```
 
+The above methods are designed for simplicty however if you need to get many of one type of model with complete custom sql then this method is more suitable:
+```php
+$classes = T::query('SELECT * from T where message=?', array('test'));
+```
+
 ### Create new
 
 ```php
