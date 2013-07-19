@@ -36,6 +36,11 @@ get method also supports plain sql and paramaters towards it in the form:
 $clasz = T::get('SELECT * FROM T WHERE id=?', array(30));
 ```
 
+Get many example:
+```php
+$classes = T::getMany(['message' => 'test']);
+```
+
 ### Create new
 
 ```php
@@ -60,3 +65,13 @@ Its name can be changed by setting the constant GlobalDBName.
 define('GlobalDBName', 'dbCon');
 ```
 This should happen _before_ inclusion of the ORM file.
+
+### Relationships
+Releationships in RDBMS occurs in three forms, one to one, one to many and many to many.
+
+Many to many requires a bridging table and this won't be directly supported.
+
+One to many is supported by using \ORM\Model::getMany() where its paramater happens to be a an associative array consisting of properties to look for.
+These are direct comparitive. No support for e.g. <> != type operators.
+
+Lastly there is one to one, this can be done by just using get.
