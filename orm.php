@@ -117,14 +117,19 @@ class Model {
     
     public function delete() {
         // array of id values
+        $this->db->beginTransaction();
         foreach(class_values($this) as $key => $value) {
             if (in_array($key, static::$ids)) {
                 $this->deleteStatement->bindValue(':' . $key, $value);
             }
         }
         $this->deleteStatement->execute();
-        if ($this->deleteStatement->errorCode() !== '00000')
+        if ($this->deleteStatement->errorCode() !== '00000') {
+            $this->db->rollback();
             throw new \Exception('Could not delete from database' . serialize($this->deleteStatement->errorInfo()));
+        } else {
+            $this->db->commit();
+        }
     }
     
     public function hasComeFromDB() {
@@ -142,6 +147,7 @@ class Model {
             $db = $GLOBALS[GlobalDBName];
         }
         if ($db != null) {
+            $db->beginTransaction();
             if (gettype($sqlOrIds) == 'array') {
                 $className = explode('\\', get_called_class());
                 $className = array_pop($className);
@@ -164,8 +170,12 @@ class Model {
                     }
                 }
                 $stmt->execute();
-                if ($stmt->errorCode() !== '00000')
+                if ($stmt->errorCode() !== '00000') {
+                    $db->rollback();
                     throw new \Exception('Could not insert into database' . serialize($stmt->errorInfo()));
+                } else {
+                    $db->commit();
+                }
                 
                 $ret = $stmt->fetchObject(get_called_class());
             } else if (gettype($sqlOrIds) == 'string') {
@@ -175,8 +185,12 @@ class Model {
                     $stmt->bindValue($key, $value);
                 }
                 $stmt->execute();
-                if ($stmt->errorCode() !== '00000')
+                if ($stmt->errorCode() !== '00000') {
+                    $db->rollback();
                     throw new \Exception('Could not insert into database' . serialize($stmt->errorInfo()));
+                } else {
+                    $db->commit();
+                }
                 
                 $ret = $stmt->fetchObject(get_called_class());
             }
