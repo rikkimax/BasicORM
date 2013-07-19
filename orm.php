@@ -243,6 +243,27 @@ class Model {
         }
         return $ret;
     }
+    
+    public static function query($sql, $params=array(), $db = null) {
+        $ret = array();
+        
+        if ($db == null && isset($GLOBALS[GlobalDBName])) {
+            $db = $GLOBALS[GlobalDBName];
+        }
+        if ($db != null) {
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            for($i = 0; $i < $stmt->rowCount(); $i++) {
+                $item = $stmt->fetchObject(get_called_class());
+                $item->hasComeFromDB();
+                $ret[] = $item;
+            }
+        } else {
+            throw new \Exception('Tried getting a database connection and failed - none existed');
+        }
+        
+        return $ret;
+    }
 }
 
 $registered_classes = array();
