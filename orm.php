@@ -275,6 +275,10 @@ function class_add($name) {
 
 function class_new($name, $values=null, $fromDb = false) {
     global $registered_classes;
+    if (!array_key_exists($name, $registered_classes)) {
+        class_add($name);
+    }
+    
     $reflect = $registered_classes[$name];
     $instance = $reflect->newInstance();
     
@@ -294,6 +298,9 @@ function class_new($name, $values=null, $fromDb = false) {
 function class_values($obj) {
     global $registered_classes;
     $name = get_class($obj);
+    if (!array_key_exists($name, $registered_classes)) {
+        class_add($name);
+    }
     $reflect = $registered_classes[$name];
     
     $ret = array();
@@ -311,6 +318,9 @@ function class_values($obj) {
 function class_property_names($obj) {
     global $registered_classes;
     $name = get_class($obj);
+    if (!array_key_exists($name, $registered_classes)) {
+        class_add($name);
+    }
     $reflect = $registered_classes[$name];
     
     $ret = array();
