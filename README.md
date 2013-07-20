@@ -17,12 +17,11 @@ class T extends \ORM\Model {
     public $id;
     public $message;
 }
-
-class_add('T');
 ```
 
 ids is overidden from \ORM\Model that lists all ids used in the class.
 
+No registration is required of types. They are automatically registered with the ORM upon first usage.
 ### Get data from database
 
 ```php
