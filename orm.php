@@ -317,7 +317,10 @@ function class_values($obj) {
 
 function class_property_names($obj) {
     global $registered_classes;
-    $name = get_class($obj);
+    if (gettype($obj) == 'object')
+        $name = get_class($obj);
+    else
+        $name = $obj;
     if (!array_key_exists($name, $registered_classes)) {
         class_add($name);
     }
