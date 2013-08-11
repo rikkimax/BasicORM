@@ -218,7 +218,7 @@ class Model {
 
                 $where = '';
                 foreach($condition as $key => $value) {
-                    $where .= $key . '=:' . $key . ' AND ';
+                    $where .= $key . '==' . $key . ' AND ';
                 }
                 if (count_chars($where) > 0) {
                     $where = substr($where, 0, -5);
