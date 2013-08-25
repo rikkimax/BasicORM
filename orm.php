@@ -29,6 +29,7 @@ class Model {
     private $cameFromDb = false;
     private $updateStatement;
     private $insertStatement;
+    private $insertIdsStatement;
     private $deleteStatement;
     private $db;
     
@@ -50,7 +51,10 @@ class Model {
                     $names .= $prop . ', ';
                     $names2 .= ':' . $prop . ', ';
                     $updateSets .= $prop . '=:' .$prop . ',';
-                }
+                } else {
+					$namesIds .= $prop . ', ';
+					$namesIds2 .= ':' . $prop . ', ';
+				}
             }
             if (count_chars($names) > 0) {
                 $names = substr($names, 0, -2);
@@ -70,6 +74,7 @@ class Model {
             
             $this->updateStatement = $db->prepare('UPDATE ' . $className . ' SET ' . $updateSets . ' WHERE ' . $where);
             $this->insertStatement = $db->prepare('INSERT INTO ' . $className . '(' . $names . ') VALUES(' . $names2 . ')');
+            $this->insertIdsStatement = $db->prepare('INSERT INTO ' . $className . '(' . $namesIds . $names . ') VALUES(' . $namesIds2 . $names2 . ')');
             $this->deleteStatement = $db->prepare('DELETE from ' . $className . ' where ' . $where);
         } else {
             throw new \Exception('Tried getting a database connection and failed - none existed');
@@ -89,26 +94,52 @@ class Model {
                 if ($this->updateStatement->errorCode() !== '00000')
                     throw new \Exception('Could not insert into database' . serialize($this->updateStatement->errorInfo()));
             } else {
-                foreach($values as $key => $value) {
-                    if (!in_array($key, static::$ids)) {
-                        $this->insertStatement->bindValue(':' . $key, $value);
+				foreach($values as $key => $value) {
+                    if (in_array($key, static::$ids)) {
+                        if ($value !== null) {
+							$insertIds = true;
+						}
                     }
                 }
-                $this->insertStatement->execute();
-                if ($this->insertStatement->errorCode() !== '00000')
-                    throw new \Exception('Could not insert into database' . serialize($this->insertStatement->errorInfo()));
-                
-                if($this->insertStatement->rowCount() == 1) {
-                    foreach($values as $key => $value) {
-                        if (in_array($key, static::$ids)) {
-                            $value = $this->db->lastInsertId($key);
-                            $this->$key = $value;
-                        }
-                    }
-                }
-                $this->hasComeFromDB();
+				if ($insertIds) {
+					foreach($values as $key => $value) {
+						$this->insertIdsStatement->bindValue(':' . $key, $value);
+					}
+					$this->insertIdsStatement->execute();
+					if ($this->insertIdsStatement->errorCode() !== '00000')
+						throw new \Exception('Could not insert into database' . serialize($this->insertIdsStatement->errorInfo()));
+					
+					if($this->insertIdsStatement->rowCount() == 1) {
+						foreach($values as $key => $value) {
+							if (in_array($key, static::$ids)) {
+								$value = $this->db->lastInsertId($key);
+								$this->$key = $value;
+							}
+						}
+					}
+					$this->hasComeFromDB();
+				} else {
+					foreach($values as $key => $value) {
+						if (!in_array($key, static::$ids)) {
+							$this->insertStatement->bindValue(':' . $key, $value);
+						}
+					}
+					$this->insertStatement->execute();
+					if ($this->insertStatement->errorCode() !== '00000')
+						throw new \Exception('Could not insert into database' . serialize($this->insertStatement->errorInfo()));
+					
+					if($this->insertStatement->rowCount() == 1) {
+						foreach($values as $key => $value) {
+							if (in_array($key, static::$ids)) {
+								$value = $this->db->lastInsertId($key);
+								$this->$key = $value;
+							}
+						}
+					}
+					$this->hasComeFromDB();
+				}
             }
-             $this->db->commit();
+            $this->db->commit();
         } catch (Exception $e) {
             $this->db->rollback();
             throw $e;
