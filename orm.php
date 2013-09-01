@@ -72,10 +72,10 @@ class Model {
             $className = explode('\\', get_class($this));
             $className = array_pop($className);
             
-            $this->updateStatement = $db->prepare('UPDATE ' . $className . ' SET ' . $updateSets . ' WHERE ' . $where);
-            $this->insertStatement = $db->prepare('INSERT INTO ' . $className . '(' . $names . ') VALUES(' . $names2 . ')');
-            $this->insertIdsStatement = $db->prepare('INSERT INTO ' . $className . '(' . $namesIds . $names . ') VALUES(' . $namesIds2 . $names2 . ')');
-            $this->deleteStatement = $db->prepare('DELETE from ' . $className . ' where ' . $where);
+            $this->updateStatement = $db->prepare('UPDATE `' . $className . '` SET ' . $updateSets . ' WHERE ' . $where);
+            $this->insertStatement = $db->prepare('INSERT INTO `' . $className . '`(' . $names . ') VALUES(' . $names2 . ')');
+			$this->insertIdsStatement = $db->prepare('INSERT INTO `' . $className . '`(' . $namesIds . $names . ') VALUES(' . $namesIds2 . $names2 . ')');
+            $this->deleteStatement = $db->prepare('DELETE from `' . $className . '` where ' . $where);
         } else {
             throw new \Exception('Tried getting a database connection and failed - none existed');
         }
