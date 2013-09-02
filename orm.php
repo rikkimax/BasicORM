@@ -197,7 +197,7 @@ class Model {
                     if (gettype($key) == 'string') {
                         $stmt->bindValue(':' . $key, $value);
                     } else {
-                        $stmt->bindValues($key, $value);
+                        $stmt->bindValue($key, $value);
                     }
                 }
                 $stmt->execute();
